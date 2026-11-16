@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INFOCAL Grand Prix - Mario Kart 2D Racing</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,600;0,700;0,900;1,800&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+  <!-- Fallback local socket.io o CDN -->
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    if (typeof io === 'undefined') {
+      document.write('<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"><\/script>');
+    }
+    // Para multijugador online en Netlify, puedes enlazar tu servidor WebSocket aquí:
+    // window.INFOCAL_SERVER_URL = 'https://tu-servidor-infocal.onrender.com';
+  </script>
+</head>
+<body>
+  <!-- ======================================================== -->
+  <!-- 1. CABECERA INSTITUCIONAL INFOCAL                         -->
+  <!-- ======================================================== -->
+  <header class="app-header">
+    <div class="header-branding">
+      <img src="logo.png" alt="Logo" class="infocal-logo">
+      <div class="header-titles">
+        <span class="sub-brand">TECNOLOGÍA &amp; INNOVACIÓN</span>
+        <h1 class="main-title">INFOCAL <span class="highlight-red">GRAND PRIX</span></h1>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="status-indicator" id="serverStatusBadge">
+        <span class="dot" id="serverStatusDot"></span>
+        <span class="label" id="serverStatusText">Conectando...</span>
+      </div>
+      <button class="nav-btn" id="openMenuBtn" title="Cambiar Circuito o Modo">
+        <span class="icon">🏁</span> Menú / Pistas
+      </button>
+      <button class="nav-btn" id="soundToggleBtn" title="Activar/Desactivar Sonido">
+        <span class="icon" id="soundIcon">🔊</span> Sonido
+      </button>
+    </div>
+  </header>
+
+  <!-- ======================================================== -->
+  <!-- 2. CONTENEDOR DEL JUEGO (CANVAS + HUD MARIO KART)         -->
+  <!-- ======================================================== -->
+  <main class="game-viewport" id="gameViewport">
+    <!-- Lienzo principal del juego -->
+    <canvas id="gameCanvas" width="1280" height="720"></canvas>
+
+    <!-- CAPA SUPERPUESTA: HUD ESTILO MARIO KART (z-index: 10; pointer-events: none) -->
+    <div class="mk-hud-overlay" id="mkHudOverlay">
+      <!-- ARRIBA A LA IZQUIERDA: POSICIÓN Y CONTADOR DE VUELTAS -->
+      <div class="hud-top-left">
+        <div class="hud-position-box">
+          <span class="hud-pos-num" id="hudPosNum">1</span>
+          <span class="hud-pos-suffix" id="hudPosSuffix">st</span>
+        </div>
+        <div class="hud-lap-box">
+          <span class="hud-lap-text" id="hudLapText">LAP 1/3</span>
+          <div class="hud-lap-progress-track">
+            <div class="hud-lap-progress-fill" id="hudLapProgressFill"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ARRIBA A LA DERECHA: TEMPORIZADOR DE LA CARRERA -->
+      <div class="hud-top-right">
+        <div class="hud-timer-card">
+          <div class="hud-timer-label">TIEMPO TOTAL</div>
+          <div class="hud-timer-val" id="hudTimer">00:00:00</div>
+          <div class="hud-best-lap" id="hudBestLap">MEJOR: --:--.--</div>
+        </div>
+      </div>
+
+      <!-- ABAJO A LA IZQUIERDA: RADAR / MINIMAPA DEL CIRCUITO -->
+      <div class="hud-bottom-left">
+        <div class="hud-minimap-container">
+          <canvas id="hudMinimapCanvas" width="170" height="170"></canvas>
+          <div class="hud-minimap-legend">
+            <span class="blip p1-blip">● Tú (Azul)</span>
+            <span class="blip p2-blip">● Rival (Rojo)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ABAJO A LA DERECHA: VELOCÍMETRO Y DERRAPE -->
+      <div class="hud-bottom-right">
+        <div class="hud-speedometer">
+          <div class="hud-speed-gauge">
+            <span class="speed-num" id="hudSpeedNum">0</span>
+            <span class="speed-unit">KM/H</span>
+          </div>
+          <div class="hud-drift-badge" id="hudDriftBadge">DRIFT</div>
+        </div>
+      </div>
+
+      <!-- BOTÓN FLOTANTE DE CÁMARA (Interactuable) -->
+      <div class="hud-interactive-controls">
+        <button class="cam-btn" id="camToggleBtn" title="Alternar Vista (Tecla C)">
+          🎥 Vista: Dinámica [C]
+        </button>
+      </div>
+    </div>
+
+    <!-- SEMÁFORO DE SALIDA "3, 2, 1, ¡YA!" -->
+    <div class="semaphore-overlay" id="semaphoreOverlay">
+      <div class="semaphore-lights">
+        <div class="sem-light red" id="semLight1"></div>
+        <div class="sem-light red" id="semLight2"></div>
+        <div class="sem-light red" id="semLight3"></div>
+        <div class="sem-light green" id="semLightGreen"></div>
+      </div>
+      <div class="semaphore-text" id="semaphoreText">PREPARADOS</div>
+    </div>
+
+    <!-- PANTALLA DE GANADOR / FIN DE CARRERA -->
+    <div class="victory-overlay" id="victoryOverlay">
+      <div class="victory-card">
+        <div class="victory-trophy">🏆</div>
+        <h2 class="victory-title" id="victoryTitle">¡CARRERA FINALIZADA!</h2>
+        <div class="winner-badge" id="victoryWinnerBadge">GANADOR: PILOTO 1</div>
+
+        <div class="victory-stats">
+          <div class="stat-col">
+            <span class="stat-lbl">Tiempo Total</span>
+            <span class="stat-val" id="victoryTotalTime">00:00.00</span>
+          </div>
+          <div class="stat-col">
+            <span class="stat-lbl">Mejor Vuelta</span>
+            <span class="stat-val highlight" id="victoryBestLap">00:00.00</span>
+          </div>
+        </div>
+
+        <div class="victory-buttons">
+          <button class="victory-btn primary" id="victoryRestartBtn">🔄 Correr Revancha</button>
+          <button class="victory-btn secondary" id="victoryMenuBtn">🏁 Volver al Menú</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANTALLA DE INICIO / LOBBY (MAIN MENU) -->
+    <div class="main-menu-overlay" id="mainMenuOverlay">
+      <div class="lobby-card">
+        <div class="lobby-header">
+          <img src="logo.png" alt="Logo" class="lobby-logo">
+          <div class="lobby-titles">
+            <span class="sub">INSTITUTO TECNOLÓGICO INFOCAL</span>
+            <h2>INFOCAL GRAND PRIX 2D</h2>
+            <p>Juego de Carreras Multijugador Top-Down con Drifting y HUD Mario Kart</p>
+          </div>
+        </div>
+
+        <!-- PASO 1: SELECCIONAR MODO -->
+        <div class="lobby-section">
+          <div class="section-badge">PASO 1</div>
+          <label class="section-title">SELECCIONA MODO DE JUEGO</label>
+          <div class="mode-options">
+            <div class="mode-card active" id="modeSingleCard" data-mode="single">
+              <div class="mode-icon">🤖</div>
+              <div class="mode-info">
+                <h3>1 Jugador vs Bot IA</h3>
+                <p>Carrera inmediata contra la IA de INFOCAL con sistema Look-Ahead y margen de error humano.</p>
+              </div>
+              <div class="mode-check">✔</div>
+            </div>
+
+            <div class="mode-card" id="modeMultiCard" data-mode="multi">
+              <div class="mode-icon">🌐</div>
+              <div class="mode-info">
+                <h3>Multijugador Online (2P)</h3>
+                <p>Compite en tiempo real con WebSockets (Socket.io). Abre otra pestaña para el Jugador 2.</p>
+              </div>
+              <div class="mode-check">✔</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PASO 2: SELECCIONAR CIRCUITO -->
+        <div class="lobby-section">
+          <div class="section-badge">PASO 2</div>
+          <label class="section-title">SELECCIONA EL CIRCUITO</label>
+          <div class="track-options">
+            <div class="track-card active" id="trackCardGP" data-track="gp">
+              <div class="track-badge diff-med">Media ★★★☆☆</div>
+              <h4>🏆 Gran Premio INFOCAL</h4>
+              <p>Trazado técnico con chicane en el infield, curvas peraltadas y recta de rebase.</p>
+            </div>
+
+            <div class="track-card" id="trackCardSpeed" data-track="speed">
+              <div class="track-badge diff-easy">Fácil ★★☆☆☆</div>
+              <h4>🏎️ Speed Ring Oval</h4>
+              <p>Circuito veloz estilo óvalo. Curvas amplias y largas rectas de aceleración pura.</p>
+            </div>
+
+            <div class="track-card" id="trackCardDrift" data-track="drift">
+              <div class="track-badge diff-hard">Experto ★★★★★</div>
+              <h4>⚡ Pro Drift Mountain</h4>
+              <p>Sucesión de curvas en "S" y horquillas cerradas para dominar el derrape con Space.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOTÓN DE ENTRAR A LA PISTA -->
+        <div class="lobby-footer">
+          <div class="controls-guide">
+            <span class="guide-item"><b>W / ↑</b> Acelerar</span>
+            <span class="guide-item"><b>S / ↓</b> Freno/Reversa</span>
+            <span class="guide-item"><b>A/D / ←/→</b> Volante</span>
+            <span class="guide-item"><b>Espacio</b> Derrape</span>
+            <span class="guide-item"><b>C</b> Alternar Cámara</span>
+          </div>
+
+          <button class="start-race-btn" id="startRaceBtn">
+            🏁 ¡ENTRAR A LA PISTA Y CORRER!
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Script principal del juego -->
+  <script src="game.js"></script>
+</body>
+</html>

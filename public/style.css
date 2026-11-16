@@ -1,0 +1,910 @@
+/* ========================================================
+   INFOCAL GRAND PRIX - MARIO KART 2D RACING STYLE
+   Paleta Institucional:
+     - Bordes / Azul Corporativo: #004b8d
+     - Línea de Meta / Alerta:    #dd1321
+     - Pasto / Fondo Exterior:   #c2c9dd
+     - Asfalto de Competición:   #1e222d
+======================================================== */
+
+:root {
+  --infocal-blue: #004b8d;
+  --infocal-blue-light: #0d6efd;
+  --infocal-red: #dd1321;
+  --infocal-grass: #c2c9dd;
+  --infocal-dark: #0c121e;
+  --infocal-dark-trans: rgba(12, 18, 30, 0.82);
+  --infocal-asphalt: #1e222d;
+  --gold-gradient: linear-gradient(180deg, #fff000 0%, #ff9500 100%);
+  --font-racing: 'Chakra Petch', system-ui, sans-serif;
+  --font-digits: 'Rajdhani', monospace, sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+body {
+  background-color: var(--infocal-dark);
+  color: #ffffff;
+  font-family: var(--font-racing);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ========================================================
+   1. CABECERA INSTITUCIONAL
+======================================================== */
+.app-header {
+  height: 64px;
+  background: linear-gradient(90deg, #090e17 0%, #00294d 50%, #090e17 100%);
+  border-bottom: 3px solid var(--infocal-blue);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 1.5rem;
+  z-index: 20;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+}
+
+.header-branding {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.infocal-logo {
+  height: 44px;
+  width: auto;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 3px 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.header-titles {
+  display: flex;
+  flex-direction: column;
+}
+
+.sub-brand {
+  font-size: 0.68rem;
+  letter-spacing: 2px;
+  color: #9cb8d6;
+  font-weight: 700;
+}
+
+.main-title {
+  font-size: 1.45rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 1px;
+  line-height: 1.1;
+  color: #ffffff;
+}
+
+.highlight-red {
+  color: var(--infocal-red);
+  text-shadow: 0 0 10px rgba(221, 19, 33, 0.6);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.status-indicator .dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #ffaa00;
+  box-shadow: 0 0 8px #ffaa00;
+}
+
+.status-indicator .dot.online {
+  background: #00ff88;
+  box-shadow: 0 0 8px #00ff88;
+}
+
+.nav-btn {
+  background: rgba(0, 75, 141, 0.4);
+  color: #ffffff;
+  border: 1.5px solid var(--infocal-blue);
+  padding: 0.42rem 0.9rem;
+  border-radius: 8px;
+  font-family: var(--font-racing);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+
+.nav-btn:hover {
+  background: var(--infocal-blue);
+  box-shadow: 0 0 12px rgba(0, 75, 141, 0.7);
+  transform: translateY(-1px);
+}
+
+/* ========================================================
+   2. VIEWPORT Y CANVAS PRINCIPAL
+======================================================== */
+.game-viewport {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: calc(100vh - 64px);
+  background-color: var(--infocal-grass);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#gameCanvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background-color: var(--infocal-grass);
+}
+
+/* ========================================================
+   3. HUD MARIO KART (CAPA SUPERPUESTA z-index: 10)
+======================================================== */
+.mk-hud-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none; /* No bloquea clicks */
+  z-index: 10;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+/* --- ARRIBA A LA IZQUIERDA: POSICIÓN Y VUELTAS --- */
+.hud-top-left {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+}
+
+.hud-position-box {
+  display: flex;
+  align-items: flex-start;
+  line-height: 0.85;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.85));
+}
+
+.hud-pos-num {
+  font-size: 4.8rem;
+  font-weight: 900;
+  font-style: italic;
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 3.5px #050b14;
+}
+
+.hud-pos-suffix {
+  font-size: 2.2rem;
+  font-weight: 900;
+  font-style: italic;
+  margin-top: 0.4rem;
+  margin-left: 0.15rem;
+  background: var(--gold-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  -webkit-text-stroke: 2.5px #050b14;
+}
+
+.hud-lap-box {
+  background: var(--infocal-dark-trans);
+  border: 2px solid var(--infocal-blue);
+  border-radius: 12px;
+  padding: 0.5rem 1rem;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  margin-top: 0.4rem;
+}
+
+.hud-lap-text {
+  font-size: 1.6rem;
+  font-weight: 900;
+  font-style: italic;
+  color: #ffffff;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+  display: block;
+}
+
+.hud-lap-progress-track {
+  width: 110px;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 3px;
+  margin-top: 0.35rem;
+  overflow: hidden;
+}
+
+.hud-lap-progress-fill {
+  width: 33%;
+  height: 100%;
+  background: var(--infocal-red);
+  box-shadow: 0 0 8px var(--infocal-red);
+  transition: width 0.3s ease;
+}
+
+/* --- ARRIBA A LA DERECHA: CRONÓMETRO --- */
+.hud-top-right {
+  align-self: flex-start;
+  margin-left: auto;
+}
+
+.hud-timer-card {
+  background: var(--infocal-dark-trans);
+  border: 2px solid var(--infocal-blue);
+  border-radius: 14px;
+  padding: 0.6rem 1.2rem;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65);
+  text-align: right;
+}
+
+.hud-timer-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #9cb8d6;
+}
+
+.hud-timer-val {
+  font-family: var(--font-digits);
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #00ff88;
+  letter-spacing: 2px;
+  text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+  line-height: 1.1;
+}
+
+.hud-best-lap {
+  font-family: var(--font-digits);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #ffaa00;
+  letter-spacing: 1px;
+}
+
+/* --- ABAJO A LA IZQUIERDA: MINIMAPA (RADAR CIRCULAR) --- */
+.hud-bottom-left {
+  align-self: flex-end;
+}
+
+.hud-minimap-container {
+  background: rgba(8, 14, 26, 0.84);
+  border: 2.5px solid var(--infocal-blue);
+  border-radius: 18px;
+  padding: 8px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.75), inset 0 0 15px rgba(0, 75, 141, 0.25);
+  backdrop-filter: blur(10px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#hudMinimapCanvas {
+  display: block;
+  border-radius: 12px;
+  background: #111722;
+}
+
+.hud-minimap-legend {
+  display: flex;
+  gap: 0.8rem;
+  margin-top: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.p1-blip { color: #3894f0; text-shadow: 0 0 6px #004b8d; }
+.p2-blip { color: #ff3344; text-shadow: 0 0 6px #dd1321; }
+
+/* --- ABAJO A LA DERECHA: VELOCÍMETRO & DRIFT --- */
+.hud-bottom-right {
+  align-self: flex-end;
+  margin-left: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.hud-speedometer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.hud-speed-gauge {
+  background: var(--infocal-dark-trans);
+  border: 2px solid var(--infocal-blue);
+  border-radius: 14px;
+  padding: 0.5rem 1.1rem;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.speed-num {
+  font-family: var(--font-digits);
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1;
+}
+
+.speed-unit {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #8faec9;
+}
+
+.hud-drift-badge {
+  font-size: 1.1rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 2px;
+  padding: 0.3rem 0.8rem;
+  border-radius: 8px;
+  background: rgba(255, 140, 0, 0.2);
+  border: 1.5px solid #ff8c00;
+  color: #ffaa00;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.hud-drift-badge.active {
+  opacity: 1;
+  transform: scale(1.1);
+  background: #ff5500;
+  color: #ffffff;
+  border-color: #ffffff;
+  box-shadow: 0 0 20px #ff5500;
+}
+
+/* --- BOTÓN DE CÁMARA (INTERACTUABLE) --- */
+.hud-interactive-controls {
+  position: absolute;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: auto; /* Permite click */
+}
+
+.cam-btn {
+  background: var(--infocal-dark-trans);
+  border: 1.5px solid var(--infocal-blue);
+  color: #ffffff;
+  padding: 0.45rem 1.1rem;
+  border-radius: 20px;
+  font-family: var(--font-racing);
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s ease;
+}
+
+.cam-btn:hover {
+  background: var(--infocal-blue);
+  box-shadow: 0 0 14px rgba(0, 75, 141, 0.8);
+}
+
+/* ========================================================
+   4. SEMÁFORO DE SALIDA (3, 2, 1, ¡YA!)
+======================================================== */
+.semaphore-overlay {
+  position: absolute;
+  top: 25%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(8, 12, 20, 0.9);
+  border: 3px solid var(--infocal-blue);
+  border-radius: 20px;
+  padding: 1.2rem 2.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(12px);
+  z-index: 25;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.semaphore-overlay.visible {
+  opacity: 1;
+}
+
+.semaphore-lights {
+  display: flex;
+  gap: 1.2rem;
+  margin-bottom: 0.8rem;
+}
+
+.sem-light {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #2a3140;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: all 0.15s ease;
+}
+
+.sem-light.red.on {
+  background: #ff1e2d;
+  box-shadow: 0 0 25px #ff1e2d;
+  border-color: #ffffff;
+}
+
+.sem-light.green.on {
+  background: #00ff66;
+  box-shadow: 0 0 35px #00ff66;
+  border-color: #ffffff;
+}
+
+.semaphore-text {
+  font-size: 2.8rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 4px;
+  color: #ffffff;
+  text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+}
+
+/* ========================================================
+   5. PANTALLA DE GANADOR / VICTORIA
+======================================================== */
+.victory-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 14, 25, 0.88);
+  backdrop-filter: blur(14px);
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.35s ease;
+}
+
+.victory-overlay.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.victory-card {
+  background: linear-gradient(180deg, #121c2e 0%, #0a111c 100%);
+  border: 3px solid var(--infocal-blue);
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.9), 0 0 30px rgba(0, 75, 141, 0.4);
+  border-radius: 24px;
+  padding: 2.5rem 3.5rem;
+  text-align: center;
+  max-width: 520px;
+  width: 90%;
+  animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes popIn {
+  0% { transform: scale(0.85); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.victory-trophy {
+  font-size: 4.5rem;
+  filter: drop-shadow(0 0 15px #ffd700);
+  margin-bottom: 0.5rem;
+}
+
+.victory-title {
+  font-size: 2.2rem;
+  font-weight: 900;
+  font-style: italic;
+  color: #ffffff;
+  letter-spacing: 2px;
+}
+
+.winner-badge {
+  display: inline-block;
+  background: var(--gold-gradient);
+  color: #0c121e;
+  font-size: 1.35rem;
+  font-weight: 900;
+  padding: 0.5rem 1.6rem;
+  border-radius: 30px;
+  margin: 1rem 0 1.5rem 0;
+  box-shadow: 0 4px 15px rgba(255, 170, 0, 0.5);
+  letter-spacing: 1px;
+}
+
+.victory-stats {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 14px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-lbl {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #8da4be;
+  letter-spacing: 1px;
+}
+
+.stat-val {
+  font-family: var(--font-digits);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.stat-val.highlight {
+  color: #00ff88;
+}
+
+.victory-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.victory-btn {
+  font-family: var(--font-racing);
+  font-size: 1.05rem;
+  font-weight: 800;
+  padding: 0.75rem 1.6rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.victory-btn.primary {
+  background: var(--infocal-red);
+  color: #ffffff;
+  box-shadow: 0 4px 15px rgba(221, 19, 33, 0.5);
+}
+
+.victory-btn.primary:hover {
+  background: #ff2535;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(221, 19, 33, 0.7);
+}
+
+.victory-btn.secondary {
+  background: rgba(0, 75, 141, 0.4);
+  color: #ffffff;
+  border: 2px solid var(--infocal-blue);
+}
+
+.victory-btn.secondary:hover {
+  background: var(--infocal-blue);
+  transform: translateY(-2px);
+}
+
+/* ========================================================
+   6. PANTALLA DE INICIO / LOBBY (MAIN MENU)
+======================================================== */
+.main-menu-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 14, 25, 0.94);
+  backdrop-filter: blur(15px);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  transition: opacity 0.35s ease, visibility 0.35s ease;
+}
+
+.main-menu-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.lobby-card {
+  background: linear-gradient(180deg, #101929 0%, #080e18 100%);
+  border: 2.5px solid var(--infocal-blue);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(0, 75, 141, 0.35);
+  border-radius: 22px;
+  padding: 2.2rem 2.5rem;
+  max-width: 900px;
+  width: 100%;
+}
+
+.lobby-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  border-bottom: 2px solid rgba(0, 75, 141, 0.4);
+  padding-bottom: 1.2rem;
+  margin-bottom: 1.4rem;
+}
+
+.lobby-logo {
+  height: 58px;
+  background: #ffffff;
+  padding: 4px 10px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.lobby-titles .sub {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #8da4be;
+}
+
+.lobby-titles h2 {
+  font-size: 2rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 1px;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.lobby-titles p {
+  font-size: 0.92rem;
+  color: #a4c2e0;
+  margin-top: 0.2rem;
+}
+
+.lobby-section {
+  margin-bottom: 1.4rem;
+}
+
+.section-badge {
+  display: inline-block;
+  background: var(--infocal-red);
+  color: #ffffff;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.2rem 0.55rem;
+  border-radius: 4px;
+  letter-spacing: 1px;
+  margin-bottom: 0.35rem;
+}
+
+.section-title {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: #ffffff;
+  margin-bottom: 0.7rem;
+}
+
+/* Modos de Juego */
+.mode-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.mode-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.mode-card:hover {
+  border-color: var(--infocal-blue-light);
+  background: rgba(0, 75, 141, 0.15);
+  transform: translateY(-2px);
+}
+
+.mode-card.active {
+  border-color: var(--infocal-blue);
+  background: rgba(0, 75, 141, 0.35);
+  box-shadow: 0 0 20px rgba(0, 75, 141, 0.5);
+}
+
+.mode-icon {
+  font-size: 2.2rem;
+}
+
+.mode-info h3 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 0.2rem;
+}
+
+.mode-info p {
+  font-size: 0.78rem;
+  color: #a0bad4;
+  line-height: 1.3;
+}
+
+.mode-check {
+  margin-left: auto;
+  font-size: 1.1rem;
+  color: var(--infocal-blue-light);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.mode-card.active .mode-check {
+  opacity: 1;
+}
+
+/* Opciones de Circuito */
+.track-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1rem;
+}
+
+.track-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.track-card:hover {
+  border-color: var(--infocal-blue-light);
+  background: rgba(0, 75, 141, 0.15);
+  transform: translateY(-2px);
+}
+
+.track-card.active {
+  border-color: var(--infocal-red);
+  background: rgba(221, 19, 33, 0.18);
+  box-shadow: 0 0 20px rgba(221, 19, 33, 0.4);
+}
+
+.track-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  align-self: flex-start;
+  margin-bottom: 0.5rem;
+}
+
+.diff-easy { background: rgba(0, 255, 136, 0.2); color: #00ff88; }
+.diff-med { background: rgba(255, 170, 0, 0.2); color: #ffaa00; }
+.diff-hard { background: rgba(221, 19, 33, 0.25); color: #ff4d5a; }
+
+.track-card h4 {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 0.3rem;
+}
+
+.track-card p {
+  font-size: 0.75rem;
+  color: #a4bad0;
+  line-height: 1.3;
+}
+
+/* Footer del Lobby */
+.lobby-footer {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 2px solid rgba(0, 75, 141, 0.4);
+  padding-top: 1.2rem;
+}
+
+.controls-guide {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  font-size: 0.78rem;
+  color: #8da4be;
+}
+
+.guide-item b {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+}
+
+.start-race-btn {
+  background: var(--infocal-red);
+  color: #ffffff;
+  font-family: var(--font-racing);
+  font-size: 1.15rem;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 1px;
+  padding: 0.85rem 2rem;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(221, 19, 33, 0.6);
+  transition: all 0.2s ease;
+}
+
+.start-race-btn:hover {
+  background: #ff2234;
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(221, 19, 33, 0.85);
+}
+
+/* ========================================================
+   7. RESPONSIVE
+======================================================== */
+@media (max-width: 900px) {
+  .mode-options, .track-options {
+    grid-template-columns: 1fr;
+  }
+  .lobby-footer {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .hud-pos-num {
+    font-size: 3.5rem;
+  }
+  .hud-pos-suffix {
+    font-size: 1.6rem;
+  }
+}
